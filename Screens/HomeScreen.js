@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Transactions from "./Transactions";
-import AddTransaction from "./AddTransaction";
 
 const budgetData = [
   { name: "Rent", amount: 1000 },
@@ -22,7 +20,7 @@ export default function HomeScreen({ navigation }) {
   );
 
   const handleAddExpensePress = () => {
-    navigation.navigate("AddTransaction");
+    navigation.navigate("Add Transaction");
   };
 
   return (

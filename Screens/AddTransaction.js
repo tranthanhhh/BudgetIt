@@ -6,7 +6,10 @@ import {
   TouchableOpacity,
   View,
   Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import Calculator from "./Calculator";
 
 export default function AddTransaction({ navigation }) {
@@ -14,6 +17,7 @@ export default function AddTransaction({ navigation }) {
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [showCalculator, setShowCalculator] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const handleSave = () => {
     const addTransaction = { name, amount: parseFloat(amount), note };
@@ -22,44 +26,75 @@ export default function AddTransaction({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>New Transaction</Text>
-      <Text style={styles.label}>Name:</Text>
-      <TextInput style={styles.input} value={name} onChangeText={setName} />
-      <Text style={styles.label}>Amount:</Text>
-      <TouchableOpacity
-        style={styles.amountInput}
-        onPress={() => setShowCalculator(true)}
-      >
-        <Text>{amount === "" ? "" : amount}</Text>
-      </TouchableOpacity>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={showCalculator}
-        onRequestClose={() => setShowCalculator(false)}
-      >
-        <View style={styles.calculatorContainer}>
-          <Calculator
-            onValueChange={(value) => {
-              setAmount(value.toFixed(2));
-              setShowCalculator(false);
-            }}
-          />
-        </View>
-      </Modal>
-      <Text style={styles.label}>Note:</Text>
-      <TextInput
-        style={styles.input}
-        value={note}
-        onChangeText={setNote}
-        multiline
-        numberOfLines={3}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleSave}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
-    </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.container}>
+        <Text style={styles.heading}>New Transaction</Text>
+        <Text style={styles.label}>Type:</Text>
+        <TouchableOpacity
+          style={styles.input}
+          onPress={() => setShowPicker(true)}
+        >
+          <Text>{name === "" ? "Select Type" : name}</Text>
+        </TouchableOpacity>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={showPicker}
+          onRequestClose={() => setShowPicker(false)}
+        >
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={name}
+              onValueChange={(itemValue, itemIndex) => {
+                setName(itemValue);
+                setShowPicker(false);
+              }}
+              style={styles.picker}
+            >
+              <Picker.Item label="Income" value="Income" color="blue" />
+              <Picker.Item label="Expenses" value="Expenses" color="blue" />
+            </Picker>
+          </View>
+        </Modal>
+        <Text style={styles.label}>Amount:</Text>
+        <TouchableOpacity
+          style={styles.amountInput}
+          onPress={() => setShowCalculator(true)}
+        >
+          <Text>{amount === "" ? "" : amount}</Text>
+        </TouchableOpacity>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showCalculator}
+          onRequestClose={() => setShowCalculator(false)}
+        >
+          <TouchableOpacity
+            style={styles.calculatorContainer}
+            onPress={() => setShowCalculator(false)}
+            activeOpacity={1}
+          >
+            <Calculator
+              onValueChange={(value) => {
+                setAmount(value.toFixed(2));
+                setShowCalculator(false);
+              }}
+            />
+          </TouchableOpacity>
+        </Modal>
+        <Text style={styles.label}>Note:</Text>
+        <TextInput
+          style={styles.input}
+          value={note}
+          onChangeText={setNote}
+          multiline
+          numberOfLines={3}
+        />
+        <TouchableOpacity style={styles.button} onPress={handleSave}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -98,6 +133,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  amountInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: "gray",
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    width: "80%",
+    justifyContent: "center",
+  },
+  calculatorContainer: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    marginTop: 525,
+    backgroundColor: "rgba(0, 0, 0, 1)",
   },
   calculator: {
     marginBottom: 16,
@@ -144,20 +195,13 @@ const styles = StyleSheet.create({
   operationButtonText: {
     color: "white",
   },
-  amountInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: "gray",
-    marginBottom: 16,
-    paddingHorizontal: 8,
-    width: "80%",
-    justifyContent: "center",
-  },
-  calculatorContainer: {
+  pickerContainer: {
     flex: 1,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    marginTop: 525,
-    backgroundColor: "rgba(0, 0, 0, 1)",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 1)",
+  },
+  picker: {
+    width: "80%",
+    alignSelf: "center",
   },
 });
