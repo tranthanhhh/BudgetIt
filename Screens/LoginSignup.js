@@ -7,14 +7,28 @@ import {
   StyleSheet,
 } from "react-native";
 
-const HomeScreen = () => {
+const LoginSignup = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   const handleSubmit = () => {
     // handle login/signup
     console.log(email, password, isSignup);
+
+    // Check if the user is signing up
+    if (isSignup) {
+      setRegistered(true);
+      setIsSignup(false);
+    } else {
+      // Check if the user is logging in and has signed up previously
+      if (email && password && registered) {
+        onLoginSuccess();
+      } else {
+        alert("Please sign up before logging in");
+      }
+    }
   };
 
   return (
@@ -86,4 +100,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default LoginSignup;
