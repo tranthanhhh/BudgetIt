@@ -7,6 +7,7 @@ import AddTransaction from "./Screens/AddTransaction";
 import Transactions from "./Screens/Transactions";
 import Account from "./Screens/Account";
 import LoginSignup from "./Screens/LoginSignup";
+
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 const Tab = createBottomTabNavigator();
@@ -22,7 +23,7 @@ const TabBarIcon = (props) => {
   );
 };
 
-function MainAppTabs() {
+function MainAppTabs({ userId }) {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -46,41 +47,45 @@ function MainAppTabs() {
       <Tab.Screen name="Home">
         {(props) => <HomeScreen {...props} />}
       </Tab.Screen>
-      <Tab.Screen name="Add Transaction" component={AddTransaction} />
+      <Tab.Screen name="Add Transaction">
+        {(props) => <AddTransaction {...props} userId={userId} />}
+      </Tab.Screen>
       <Tab.Screen name="Transactions" component={Transactions} />
       <Tab.Screen name="Profile" component={Account} />
     </Tab.Navigator>
   );
 }
 
-function AuthStack({ handleLoginSuccess }) {
+function AuthStack({ onLoginSuccess }) {
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="Login"
         options={{ title: "Login" }}
         children={(props) => (
-          <LoginSignup {...props} onLoginSuccess={handleLoginSuccess} />
+          <LoginSignup {...props} onLoginSuccess={onLoginSuccess} />
         )}
       />
     </Stack.Navigator>
   );
 }
 
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+function App() {
+  const [userId, setUserId] = useState(null);
 
-  const handleLoginSuccess = () => {
-    setIsLoggedIn(true);
+  const handleLoginSuccess = (userId) => {
+    setUserId(userId);
   };
 
   return (
     <NavigationContainer>
-      {isLoggedIn ? (
-        <MainAppTabs />
+      {userId ? (
+        <MainAppTabs userId={userId} />
       ) : (
-        <AuthStack handleLoginSuccess={handleLoginSuccess} />
+        <AuthStack onLoginSuccess={handleLoginSuccess} />
       )}
     </NavigationContainer>
   );
 }
+
+export default App;

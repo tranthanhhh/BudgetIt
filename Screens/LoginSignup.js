@@ -6,28 +6,34 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import axios from "axios";
 
 const LoginSignup = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
-  const [registered, setRegistered] = useState(false);
 
-  const handleSubmit = () => {
-    // handle login/signup
-    console.log(email, password, isSignup);
+  const API_URL = "http://localhost:3000"; // Replace with your API URL
 
-    // Check if the user is signing up
-    if (isSignup) {
-      setRegistered(true);
-      setIsSignup(false);
-    } else {
-      // Check if the user is logging in and has signed up previously
-      if (email && password && registered) {
-        onLoginSuccess();
-      } else {
-        alert("Please sign up before logging in");
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.post(
+        API_URL + (isSignup ? "/signup" : "/login"),
+        { email, password }
+      );
+
+      if (response.status === 201 && isSignup) {
+        setIsSignup(false);
+        alert("Successfully signed up! You can log in now.");
+      } else if (response.status === 200 && !isSignup) {
+        onLoginSuccess(response.data.userId);
       }
+    } catch (error) {
+      console.error("Error:", error.message);
+      alert(
+        "Error: " +
+          (error.response ? error.response.data : "Something went wrong.")
+      );
     }
   };
 

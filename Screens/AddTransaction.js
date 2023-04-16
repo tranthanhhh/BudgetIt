@@ -11,18 +11,29 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Calculator from "./Calculator";
+import axios from "axios";
 
-export default function AddTransaction({ navigation }) {
+export default function AddTransaction({ navigation, userId }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [showCalculator, setShowCalculator] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
-  const handleSave = () => {
-    const addTransaction = { name, amount: parseFloat(amount), note };
-    console.log("New Transaction:", addTransaction);
-    navigation.goBack();
+  const handleSave = async () => {
+    const addTransaction = {
+      userId: userId,
+      type: name,
+      amount: parseFloat(amount),
+      note,
+    };
+    try {
+      await axios.post("http://localhost:3000/add-transaction", addTransaction);
+      console.log("New Transaction:", addTransaction);
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error adding transaction:", error.message);
+    }
   };
 
   return (
