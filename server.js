@@ -18,6 +18,7 @@ mongoose
 const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
+  budget: Number,
 });
 
 const User = mongoose.model("User", userSchema);
@@ -68,6 +69,73 @@ app.post("/add-transaction", async (req, res) => {
   } catch (error) {
     console.error("Error adding transaction:", error.message);
     res.status(400).send("Error adding transaction");
+  }
+});
+
+app.post("/set-budget", async (req, res) => {
+  try {
+    const { userId, budget } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { budget },
+      { new: true }
+    );
+    if (user) {
+      res.status(200).send("Budget updated");
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (error) {
+    console.error("Error setting budget:", error.message);
+    res.status(400).send("Error setting budget");
+  }
+});
+
+app.post("/update-budget", async (req, res) => {
+  try {
+    const { userId, amount } = req.body;
+    const user = await User.findById(userId);
+    if (user) {
+      user.budget += amount;
+      await user.save();
+      res.status(200).send("Budget updated");
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (error) {
+    console.error("Error updating budget:", error.message);
+    res.status(400).send("Error updating budget");
+  }
+});
+
+app.post("/get-budget", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+    if (user) {
+      res.status(200).json({ budget: user.budget });
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (error) {
+    console.error("Error getting budget:", error.message);
+    res.status(400).send("Error getting budget");
+  }
+});
+
+app.post("/get-transactions", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const transactions = await Transaction.find({ user: userId });
+
+    if (transactions) {
+      res.status(200).json({ transactions: transactions });
+    } else {
+      res.status(404).send("Transactions not found");
+    }
+  } catch (error) {
+    console.error("Error getting transactions:", error.message);
+    res.status(400).send("Error getting transactions");
   }
 });
 

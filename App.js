@@ -45,7 +45,7 @@ function MainAppTabs({ userId }) {
       })}
     >
       <Tab.Screen name="Home">
-        {(props) => <HomeScreen {...props} />}
+        {(props) => <HomeScreen {...props} userId={userId} />}
       </Tab.Screen>
       <Tab.Screen name="Add Transaction">
         {(props) => <AddTransaction {...props} userId={userId} />}

@@ -13,7 +13,11 @@ import { Picker } from "@react-native-picker/picker";
 import Calculator from "./Calculator";
 import axios from "axios";
 
-export default function AddTransaction({ navigation, userId }) {
+export default function AddTransaction({
+  navigation,
+  userId,
+  onTransactionAdded,
+}) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -29,7 +33,16 @@ export default function AddTransaction({ navigation, userId }) {
     };
     try {
       await axios.post("http://localhost:3000/add-transaction", addTransaction);
+      const budgetUpdate = {
+        userId: userId,
+        amount: name === "Income" ? parseFloat(amount) : -parseFloat(amount),
+      };
+      await axios.post("http://localhost:3000/update-budget", budgetUpdate);
+
       console.log("New Transaction:", addTransaction);
+      if (onTransactionAdded) {
+        onTransactionAdded();
+      }
       navigation.goBack();
     } catch (error) {
       console.error("Error adding transaction:", error.message);
