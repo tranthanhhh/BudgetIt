@@ -7,7 +7,7 @@ import AddTransaction from "./Screens/AddTransaction";
 import Transactions from "./Screens/Transactions";
 import Account from "./Screens/Account";
 import LoginSignup from "./Screens/LoginSignup";
-
+import AllTransactions from "./Screens/AllTransaction";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 const Tab = createBottomTabNavigator();
@@ -23,36 +23,51 @@ const TabBarIcon = (props) => {
   );
 };
 
-function MainAppTabs({ userId }) {
+function MainAppTabs({ userId, onSignOut }) {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused }) => {
-          let iconName;
+    <Stack.Navigator>
+      <Stack.Screen name="TabScreens" options={{ headerShown: false }}>
+        {() => (
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused }) => {
+                let iconName;
 
-          if (route.name === "Home") {
-            iconName = "earth-outline";
-          } else if (route.name === "Add Transaction") {
-            iconName = "add-circle-outline";
-          } else if (route.name === "Transactions") {
-            iconName = "list-circle-outline";
-          } else if (route.name === "Profile") {
-            iconName = "person-circle-outline";
-          }
+                if (route.name === "Home") {
+                  iconName = "earth-outline";
+                } else if (route.name === "Add Transaction") {
+                  iconName = "add-circle-outline";
+                } else if (route.name === "Transactions") {
+                  iconName = "list-circle-outline";
+                } else if (route.name === "Profile") {
+                  iconName = "person-circle-outline";
+                }
 
-          return <TabBarIcon name={iconName} focused={focused} />;
-        },
-      })}
-    >
-      <Tab.Screen name="Home">
-        {(props) => <HomeScreen {...props} userId={userId} />}
-      </Tab.Screen>
-      <Tab.Screen name="Add Transaction">
-        {(props) => <AddTransaction {...props} userId={userId} />}
-      </Tab.Screen>
-      <Tab.Screen name="Transactions" component={Transactions} />
-      <Tab.Screen name="Profile" component={Account} />
-    </Tab.Navigator>
+                return <TabBarIcon name={iconName} focused={focused} />;
+              },
+            })}
+          >
+            <Tab.Screen name="Home">
+              {(props) => <HomeScreen {...props} userId={userId} />}
+            </Tab.Screen>
+            <Tab.Screen name="Add Transaction">
+              {(props) => <AddTransaction {...props} userId={userId} />}
+            </Tab.Screen>
+            <Tab.Screen name="Transactions">
+              {(props) => <Transactions {...props} userId={userId} />}
+            </Tab.Screen>
+            <Tab.Screen name="Profile">
+              {(props) => (
+                <Account {...props} userId={userId} signOut={onSignOut} />
+              )}
+            </Tab.Screen>
+          </Tab.Navigator>
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="All Transactions">
+        {(props) => <AllTransactions {...props} userId={userId} />}
+      </Stack.Screen>
+    </Stack.Navigator>
   );
 }
 
@@ -77,10 +92,14 @@ function App() {
     setUserId(userId);
   };
 
+  const handleSignOut = () => {
+    setUserId(null);
+  };
+
   return (
     <NavigationContainer>
       {userId ? (
-        <MainAppTabs userId={userId} />
+        <MainAppTabs userId={userId} onSignOut={handleSignOut} />
       ) : (
         <AuthStack onLoginSuccess={handleLoginSuccess} />
       )}

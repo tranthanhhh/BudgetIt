@@ -1,13 +1,33 @@
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import axios from "axios";
 
-const SettingsScreen = () => {
-  const user = {
-    name: "Test",
-    email: "test@test.com",
+const AccountScreen = ({ userId, signOut }) => {
+  const [user, setUser] = useState({
+    name: "",
+    email: "",
     profilePicture: "https://via.placeholder.com/150",
-  };
+  });
 
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/users/${userId}`
+        );
+        const userData = response.data;
+        setUser({
+          ...user,
+          name: userData.name,
+          email: userData.email,
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error.message);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
   return (
     <View style={styles.container}>
       <Image
@@ -16,6 +36,9 @@ const SettingsScreen = () => {
       />
       <Text style={styles.profileName}>{user.name}</Text>
       <Text style={styles.profileEmail}>{user.email}</Text>
+      <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
+        <Text style={styles.signOutButtonText}>Sign Out</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -42,6 +65,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#444",
   },
+  signOutButton: {
+    backgroundColor: "#EF5354",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  signOutButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+  },
 });
 
-export default SettingsScreen;
+export default AccountScreen;

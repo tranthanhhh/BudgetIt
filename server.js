@@ -139,5 +139,70 @@ app.post("/get-transactions", async (req, res) => {
   }
 });
 
+app.post("/get-expenses", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const expenses = await Transaction.find({ user: userId, type: "Expenses" });
+
+    if (expenses) {
+      res.status(200).json({ expenses: expenses });
+    } else {
+      res.status(404).send("Expenses not found");
+    }
+  } catch (error) {
+    console.error("Error getting expenses:", error.message);
+    res.status(400).send("Error getting expenses");
+  }
+});
+
+app.post("/get-income", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const income = await Transaction.find({ user: userId, type: "Income" });
+
+    if (income) {
+      res.status(200).json({ income: income });
+    } else {
+      res.status(404).send("Income not found");
+    }
+  } catch (error) {
+    console.error("Error getting income:", error.message);
+    res.status(400).send("Error getting income");
+  }
+});
+
+app.post("/get-user-email", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const user = await User.findById(userId);
+    if (user) {
+      res.status(200).json({ email: user.email });
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (error) {
+    console.error("Error getting user email:", error.message);
+    res.status(400).send("Error getting user email");
+  }
+});
+
+app.get("/users/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    if (user) {
+      res.status(200).json({
+        // name: user.name,
+        email: user.email,
+      });
+    } else {
+      res.status(404).send("User not found");
+    }
+  } catch (error) {
+    console.error("Error getting user data:", error.message);
+    res.status(400).send("Error getting user data");
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

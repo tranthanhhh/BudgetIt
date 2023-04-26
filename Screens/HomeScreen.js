@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   StyleSheet,
   Text,
@@ -7,14 +8,32 @@ import {
   Modal,
   TextInput,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import axios from "axios";
-import useBudgetData from "./useBudgetData";
 
 export default function HomeScreen({ navigation, userId }) {
   const [totalBudget, setTotalBudget] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [inputBudget, setInputBudget] = useState("");
   const [transactions, setTransactions] = useState([]);
+  const [userEmail, setUserEmail] = useState("");
+
+  const fetchUserEmail = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/get-user-email",
+        {
+          userId,
+        }
+      );
+
+      if (response.status === 200) {
+        setUserEmail(response.data.email);
+      }
+    } catch (error) {
+      console.error("Error fetching user email:", error.message);
+    }
+  };
 
   const fetchBudget = async () => {
     try {
@@ -52,10 +71,13 @@ export default function HomeScreen({ navigation, userId }) {
     fetchBudget();
   }, []);
 
-  useEffect(() => {
-    fetchBudget();
-    fetchTransactions();
-  }, [userId, onTransactionAdded]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchBudget();
+      fetchTransactions();
+      fetchUserEmail();
+    }, [onTransactionAdded])
+  );
 
   const handleAddExpensePress = () => {
     navigation.navigate("Add Transaction", {
@@ -66,6 +88,10 @@ export default function HomeScreen({ navigation, userId }) {
 
   const handleSetBudgetPress = () => {
     setModalVisible(true);
+  };
+
+  const handleViewAllTransactions = () => {
+    navigation.navigate("All Transactions");
   };
 
   const handleSubmitBudget = async () => {
@@ -87,18 +113,41 @@ export default function HomeScreen({ navigation, userId }) {
     setModalVisible(false);
   };
 
+  const transactionColor = (transactionType) => {
+    return transactionType === "Income" ? "#50C474" : "#EF5354";
+  };
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Budget</Text>
-      <Text style={styles.totalBudget}>Total Budget: ${totalBudget}</Text>
-      <View style={styles.buttons}>
-        <TouchableOpacity style={styles.button} onPress={handleSetBudgetPress}>
-          <Text style={styles.buttonText}>Set Budget</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleAddExpensePress}>
-          <Text style={styles.buttonText}>Add Expense</Text>
-        </TouchableOpacity>
+      <View style={styles.headerContainer}>
+        <Text style={styles.welcomeHeader}>Welcome</Text>
+        <Text style={styles.userEmail}>{userEmail}</Text>
       </View>
+      <TouchableOpacity
+        style={styles.totalBudgetButton}
+        onPress={handleSetBudgetPress}
+      >
+        <LinearGradient
+          colors={["#94C3F6", "#94EDF7"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.totalBudgetGradient}
+        >
+          <Text style={styles.totalBudget}>Total Balance</Text>
+          <Text style={styles.totalBudget}>{formatCurrency(totalBudget)}</Text>
+        </LinearGradient>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleAddExpensePress}>
+        <Text style={styles.buttonText}>Add Expense</Text>
+      </TouchableOpacity>
       <Modal
         animationType="slide"
         transparent={true}
@@ -127,13 +176,30 @@ export default function HomeScreen({ navigation, userId }) {
         </View>
       </Modal>
       <View style={styles.transactions}>
-        <Text style={styles.transactionHeader}>Transactions</Text>
-        {transactions.map((transaction, index) => (
-          <View key={index} style={styles.transaction}>
-            <Text style={styles.transactionName}>{transaction.note}</Text>
-            <Text style={styles.transactionAmount}>${transaction.amount}</Text>
-          </View>
-        ))}
+        <View style={styles.transactionsHeader}>
+          <Text style={styles.transactionHeader}>Previous Transactions</Text>
+          <TouchableOpacity onPress={handleViewAllTransactions}>
+            <Text style={styles.arrowText}>&gt;</Text>
+          </TouchableOpacity>
+        </View>
+
+        {transactions
+          .slice()
+          .reverse()
+          .slice(0, 6)
+          .map((transaction, index) => (
+            <View key={index} style={styles.transaction}>
+              <Text style={styles.transactionName}>{transaction.note}</Text>
+              <Text
+                style={[
+                  styles.transactionAmount,
+                  { color: transactionColor(transaction.type) },
+                ]}
+              >
+                {formatCurrency(transaction.amount)}
+              </Text>
+            </View>
+          ))}
       </View>
     </View>
   );
@@ -145,13 +211,51 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  transactionsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  headerContainer: {
+    alignSelf: "flex-start",
+    marginBottom: 24,
+    paddingLeft: 20,
+    marginTop: -100,
+  },
+  welcomeHeader: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  userEmail: {
+    fontSize: 18,
+    marginBottom: 5,
+  },
+  totalBudgetButton: {
+    width: "90%",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginBottom: 24,
+  },
+  totalBudgetGradient: {
+    paddingVertical: 50,
+    paddingHorizontal: 30,
+  },
+  totalBudget: {
+    fontSize: 30,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "white",
+  },
   heading: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 24,
   },
   totalBudget: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 24,
   },
@@ -172,7 +276,7 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   transactionHeader: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
   },
@@ -218,6 +322,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 8,
     width: "100%",
+    color: "black",
+  },
+  arrowText: {
+    fontSize: 24,
     color: "black",
   },
 });

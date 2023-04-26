@@ -24,6 +24,12 @@ export default function AddTransaction({
   const [showCalculator, setShowCalculator] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
+  const resetFields = () => {
+    setName("");
+    setAmount("");
+    setNote("");
+  };
+
   const handleSave = async () => {
     const addTransaction = {
       userId: userId,
@@ -43,6 +49,7 @@ export default function AddTransaction({
       if (onTransactionAdded) {
         onTransactionAdded();
       }
+      resetFields();
       navigation.goBack();
     } catch (error) {
       console.error("Error adding transaction:", error.message);

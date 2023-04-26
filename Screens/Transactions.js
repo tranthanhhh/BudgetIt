@@ -1,73 +1,136 @@
-import React from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { BarChart } from "react-native-chart-kit";
+import { PieChart } from "react-native-chart-kit";
+import axios from "axios";
+import { useFocusEffect } from "@react-navigation/native";
 
-const transactionData = [
-  { name: "Gas", amount: 50 },
-  { name: "Dinner", amount: 75 },
-  { name: "Movie tickets", amount: 30 },
-];
+export default function Transactions({ userId }) {
+  const [transactionData, setTransactionData] = useState([]);
+  const [budgetData, setBudgetData] = useState([]);
+  const [incomeTransactions, setIncomeTransactions] = useState([]);
+  const [expenseTransactions, setExpenseTransactions] = useState([]);
 
-const budgetData = [
-  { name: "Rent", amount: 1000 },
-  { name: "Groceries", amount: 500 },
-  { name: "Entertainment", amount: 200 },
-  { name: "Transportation", amount: 300 },
-];
+  const fetchData = async () => {
+    try {
+      const expensesResponse = await axios.post(
+        "http://localhost:3000/get-expenses",
+        {
+          userId,
+        }
+      );
+      const incomeResponse = await axios.post(
+        "http://localhost:3000/get-income",
+        {
+          userId,
+        }
+      );
 
-export default function Transactions() {
-  const transactionLabels = transactionData.map(
-    (transaction) => transaction.name
+      if (expensesResponse.status === 200) {
+        setExpenseTransactions(expensesResponse.data.expenses);
+        console.log("Expenses:", expensesResponse.data.expenses);
+      }
+
+      if (incomeResponse.status === 200) {
+        setIncomeTransactions(incomeResponse.data.income);
+        console.log("Income:", incomeResponse.data.income);
+      }
+
+      setTransactionData([
+        ...expensesResponse.data.expenses,
+        ...incomeResponse.data.income,
+      ]);
+      setBudgetData([...incomeResponse.data.income]);
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+
+      return () => {
+        setTransactionData([]);
+        setBudgetData([]);
+        setIncomeTransactions([]);
+        setExpenseTransactions([]);
+      };
+    }, [])
   );
-  const transactionAmounts = transactionData.map(
-    (transaction) => transaction.amount
-  );
-  const budgetLabels = budgetData.map((budget) => budget.name);
-  const budgetAmounts = budgetData.map((budget) => budget.amount);
+
+  useEffect(() => {
+    const income = transactionData.filter(
+      (transaction) => transaction.type === "Income"
+    );
+    const expenses = transactionData.filter(
+      (transaction) => transaction.type === "Expenses"
+    );
+
+    setIncomeTransactions(income);
+    setExpenseTransactions(expenses);
+  }, [transactionData]);
+
+  const pieChartData = [
+    {
+      name: "Expenses",
+      amount: expenseTransactions.reduce((sum, item) => sum + item.amount, 0),
+      color: "#EF5354",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+    {
+      name: "Income",
+      amount: incomeTransactions.reduce((sum, item) => sum + item.amount, 0),
+      color: "#50C474",
+      legendFontColor: "#7F7F7F",
+      legendFontSize: 15,
+    },
+  ];
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Budget and Transactions</Text>
-      <BarChart
-        data={{
-          labels: budgetLabels,
-          datasets: [
-            {
-              data: budgetAmounts,
-              color: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
-            },
-            {
-              data: transactionAmounts,
-              color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`,
-            },
-          ],
-        }}
+      <PieChart
+        data={pieChartData}
         width={350}
         height={200}
-        yAxisSuffix="$"
         chartConfig={{
-          backgroundColor: "#ffffff",
-          backgroundGradientFrom: "#ffffff",
-          backgroundGradientTo: "#ffffff",
-          decimalPlaces: 2,
           color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          style: {
-            borderRadius: 16,
-          },
         }}
-        style={{
-          marginVertical: 8,
-          borderRadius: 16,
-        }}
+        accessor="amount"
+        backgroundColor="transparent"
+        paddingLeft="15"
+        absolute
       />
       <View style={styles.transactions}>
-        <Text style={styles.transactionHeader}>Transactions</Text>
-        {transactionData.map((transaction, index) => (
-          <View key={index} style={styles.transaction}>
-            <Text style={styles.transactionName}>{transaction.name}</Text>
-            <Text style={styles.transactionAmount}>${transaction.amount}</Text>
-          </View>
-        ))}
+        <Text style={styles.transactionHeader}>Income Transactions</Text>
+        {incomeTransactions
+          .slice()
+          .reverse()
+          .slice(0, 3)
+          .map((transaction, index) => (
+            <View key={index} style={styles.transaction}>
+              <Text style={styles.transactionName}>{transaction.note}</Text>
+              <Text style={styles.transactionAmount}>
+                ${transaction.amount}
+              </Text>
+            </View>
+          ))}
+      </View>
+      <View style={styles.transactions}>
+        <Text style={styles.transactionHeader}>Expense Transactions</Text>
+        {expenseTransactions
+          .slice()
+          .reverse()
+          .slice(0, 3)
+          .map((transaction, index) => (
+            <View key={index} style={styles.transaction}>
+              <Text style={styles.transactionName}>{transaction.note}</Text>
+              <Text style={styles.transactionAmount}>
+                ${transaction.amount}
+              </Text>
+            </View>
+          ))}
       </View>
     </View>
   );
@@ -90,7 +153,7 @@ const styles = StyleSheet.create({
   transactionHeader: {
     fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 10,
   },
   transaction: {
     flexDirection: "row",
@@ -98,6 +161,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: "gray",
     paddingVertical: 8,
+    marginBottom: 10,
   },
   transactionName: {
     fontSize: 16,
