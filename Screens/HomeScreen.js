@@ -82,7 +82,6 @@ export default function HomeScreen({ navigation, userId }) {
   const handleAddExpensePress = () => {
     navigation.navigate("Add Transaction", {
       userId: userId,
-      onTransactionAdded: () => onTransactionAdded(),
     });
   };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import Calculator from "./Calculator";
 import axios from "axios";
@@ -23,6 +24,12 @@ export default function AddTransaction({
   const [note, setNote] = useState("");
   const [showCalculator, setShowCalculator] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({
+      onTransactionAdded: () => onTransactionAdded(),
+    });
+  }, [navigation, onTransactionAdded]);
 
   const resetFields = () => {
     setName("");
